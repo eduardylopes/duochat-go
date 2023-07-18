@@ -2,7 +2,6 @@ package user
 
 import (
 	"context"
-	"errors"
 	"os"
 	"server/util"
 	"strconv"
@@ -35,13 +34,13 @@ func (s *service) CreateUser(c context.Context, req *CreateUserReq) (*CreateUser
 		return nil, err
 	}
 
-	u, _ := s.Repository.GetUserByEmail(ctx, req.Email)
+	_, err = s.Repository.GetUserByEmail(ctx, req.Email)
 
-	if u != nil {
-		return &CreateUserRes{}, errors.New("email already in use")
+	if err != nil {
+		return nil, err
 	}
 
-	u = &User{
+	u := &User{
 		Username: req.Username, Email: req.Email, Password: hashedPassword,
 	}
 
@@ -52,7 +51,7 @@ func (s *service) CreateUser(c context.Context, req *CreateUserReq) (*CreateUser
 	}
 
 	res := &CreateUserRes{
-		Id:       r.Id,
+		ID:       r.ID,
 		Username: r.Username,
 		Email:    r.Email,
 	}
@@ -61,7 +60,7 @@ func (s *service) CreateUser(c context.Context, req *CreateUserReq) (*CreateUser
 }
 
 type MyJWTClaims struct {
-	Id       string `json:"id"`
+	ID       string `json:"id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
@@ -81,10 +80,10 @@ func (s *service) Login(c context.Context, req *LoginUserReq) (*LoginUserRes, er
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, MyJWTClaims{
-		Id:       strconv.Itoa(int(u.Id)),
+		ID:       strconv.Itoa(int(u.ID)),
 		Username: u.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    strconv.Itoa(int(u.Id)),
+			Issuer:    strconv.Itoa(int(u.ID)),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 		},
 	})
@@ -94,5 +93,5 @@ func (s *service) Login(c context.Context, req *LoginUserReq) (*LoginUserRes, er
 		return &LoginUserRes{}, err
 	}
 
-	return &LoginUserRes{accessToken: ss, Username: u.Username, Id: strconv.Itoa(int(u.Id))}, nil
+	return &LoginUserRes{accessToken: ss, Username: u.Username, ID: strconv.Itoa(int(u.ID))}, nil
 }
