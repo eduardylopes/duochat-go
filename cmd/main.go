@@ -4,6 +4,7 @@ import (
 	"log"
 	"server/db"
 	"server/internal/user"
+	"server/internal/ws"
 	"server/router"
 
 	"github.com/joho/godotenv"
@@ -26,6 +27,11 @@ func main() {
 	userSvc := user.NewService(userRep)
 	userHandler := user.NewHandler(userSvc)
 
-	router.InitRouter(userHandler)
-	router.Start("0.0.0.0:8080")
+	hub := ws.NewHub()
+	wsHandler := ws.NewHandler(hub)
+
+	go hub.Run()
+
+	router.InitRouter(userHandler, wsHandler)
+	router.Start("localhost:3000")
 }
