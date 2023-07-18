@@ -61,7 +61,7 @@ func (s *service) CreateUser(c context.Context, req *CreateUserReq) (*CreateUser
 }
 
 type MyJWTClaims struct {
-	ID       string `json:"id"`
+	Id       string `json:"id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
@@ -81,7 +81,7 @@ func (s *service) Login(c context.Context, req *LoginUserReq) (*LoginUserRes, er
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, MyJWTClaims{
-		ID:       strconv.Itoa(int(u.Id)),
+		Id:       strconv.Itoa(int(u.Id)),
 		Username: u.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    strconv.Itoa(int(u.Id)),
