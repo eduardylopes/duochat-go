@@ -3,7 +3,6 @@ package user
 import (
 	"context"
 	"database/sql"
-	"strconv"
 )
 
 type DBTX interface {
@@ -17,6 +16,10 @@ type repository struct {
 	db DBTX
 }
 
+func NewRepository(db DBTX) Repository {
+	return &repository{db: db}
+}
+
 func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) {
 	var lastInsertId int
 
@@ -27,11 +30,19 @@ func (r *repository) CreateUser(ctx context.Context, user *User) (*User, error) 
 		return &User{}, err
 	}
 
-	user.Id = strconv.Itoa(lastInsertId)
+	user.Id = int64(lastInsertId)
 
 	return user, nil
 }
 
-func NewRepository(db DBTX) Repository {
-	return &repository{db: db}
+func (r *repository) GetUserByEmail(ctx context.Context, email string) (*User, error) {
+	u := User{}
+	query := "SELECT id, email, username, password FROM users WHERE email = $1"
+	err := r.db.QueryRowContext(ctx, query, email).Scan(&u.Id, &u.Email, &u.Username, &u.Password)
+
+	if err != nil {
+		return &User{}, nil
+	}
+
+	return &u, nil
 }
